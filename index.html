@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#080b0d" />
+  <meta name="description" content="A new EVM network for games, digital assets and creator collaboration. Genesis phase in progress." />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <title>Cornerstone Network — Connect What Matters</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #080b0d;
+      --ink-2: #0d1214;
+      --line: rgba(214, 236, 226, .14);
+      --line-strong: rgba(214, 236, 226, .25);
+      --text: #f1f5ec;
+      --muted: #93a09a;
+      --lime: #b7f34b;
+      --aqua: #5de4d6;
+      --blue: #72a6ff;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--ink);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    .page { position: relative; isolation: isolate; background: radial-gradient(circle at 72% 18%, rgba(45, 88, 86, .18), transparent 35%), var(--ink); }
+    .noise { position: fixed; inset: 0; pointer-events: none; z-index: 3; opacity: .05; mix-blend-mode: screen; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E"); }
+    #network-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; opacity: .68; }
+    .shell { width: min(1220px, calc(100% - 56px)); margin: 0 auto; }
+    header { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 26px 0; }
+    .brand { display: inline-flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .brand-mark { width: 28px; height: 28px; position: relative; display: grid; place-items: center; border: 1px solid rgba(183, 243, 75, .55); border-radius: 9px; }
+    .brand-mark::before, .brand-mark::after { content: ""; position: absolute; width: 7px; height: 7px; border-radius: 2px; background: var(--lime); }
+    .brand-mark::before { top: 5px; left: 5px; box-shadow: 11px 0 0 var(--aqua); }
+    .brand-mark::after { top: 16px; left: 11px; box-shadow: 0 0 0 0 var(--lime); }
+    nav { display: flex; gap: 30px; color: #b6c1bb; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+    nav a { transition: color .25s ease; }
+    nav a:hover { color: var(--lime); }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .language-control { position: relative; }
+    .language-trigger { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; background: rgba(8, 11, 13, .48); color: #dce6df; cursor: pointer; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; transition: border-color .25s ease, background .25s ease; }
+    .language-trigger:hover, .language-control.open .language-trigger { border-color: rgba(183, 243, 75, .52); background: rgba(183, 243, 75, .06); }
+    .language-flag { font-size: 16px; line-height: 1; }
+    .language-chevron { color: #8e9d94; font-size: 13px; transition: transform .25s ease; }
+    .language-control.open .language-chevron { transform: rotate(180deg); }
+    .language-menu { position: absolute; top: calc(100% + 10px); right: 0; min-width: 168px; display: grid; gap: 4px; padding: 7px; border: 1px solid var(--line-strong); border-radius: 14px; background: rgba(9, 14, 15, .94); box-shadow: 0 18px 40px rgba(0, 0, 0, .35); backdrop-filter: blur(18px); opacity: 0; pointer-events: none; transform: translateY(-5px); transition: opacity .2s ease, transform .2s ease; }
+    .language-control.open .language-menu { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .language-option { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 11px; border: 0; border-radius: 9px; background: transparent; color: #aebbb3; cursor: pointer; text-align: left; font-size: 13px; transition: background .2s ease, color .2s ease; }
+    .language-option:hover, .language-option.selected { background: rgba(183, 243, 75, .1); color: var(--text); }
+    .language-option .language-flag { width: 20px; text-align: center; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; color: #c5d1cb; font-size: 11px; letter-spacing: .09em; text-transform: uppercase; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 14px rgba(183, 243, 75, .8); animation: pulse 2s infinite; }
+    .hero { min-height: 720px; display: grid; grid-template-columns: 1.08fr .92fr; gap: 50px; align-items: center; padding: 84px 0 110px; }
+    .eyebrow { display: flex; align-items: center; gap: 12px; color: var(--aqua); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 32px; height: 1px; background: var(--aqua); box-shadow: 0 0 12px rgba(93, 228, 214, .7); }
+    h1 { max-width: 800px; margin: 22px 0 24px; font-size: clamp(4.1rem, 8.4vw, 8rem); line-height: .9; letter-spacing: -.075em; font-weight: 620; }
+    h1 em { color: var(--lime); font-style: normal; }
+    .hero-copy { max-width: 520px; color: #b0bdb6; font-size: 17px; line-height: 1.65; }
+    .hero-copy strong { color: var(--text); font-weight: 500; }
+    .hero-cta { display: flex; align-items: center; gap: 18px; margin-top: 38px; flex-wrap: wrap; }
+    .cta { display: inline-flex; align-items: center; gap: 15px; padding: 14px 18px 14px 20px; border: 1px solid var(--lime); border-radius: 999px; background: var(--lime); color: #0a0e0f; font-size: 12px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; transition: transform .25s ease, box-shadow .25s ease; }
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(183, 243, 75, .22); }
+    .cta-label { white-space: nowrap; }
+    .cta-arrow { display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: #0a0e0f; color: var(--lime); font-size: 16px; }
+    .ghost { color: #c3cdc6; font-size: 13px; letter-spacing: .05em; border-bottom: 1px solid rgba(195, 205, 198, .3); padding-bottom: 3px; }
+    .hero-meta { display: flex; gap: 26px; margin-top: 52px; color: #7e8b84; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+    .hero-meta div { display: flex; flex-direction: column; gap: 8px; }
+    .hero-meta b { color: #d1dbd4; font-size: 13px; font-weight: 500; letter-spacing: .04em; text-transform: none; }
+    .orb-stage { min-height: 510px; position: relative; display: grid; place-items: center; }
+    .orb-stage::before { content: ""; position: absolute; width: 78%; aspect-ratio: 1; border: 1px solid rgba(93, 228, 214, .12); border-radius: 50%; box-shadow: 0 0 70px rgba(93, 228, 214, .06), inset 0 0 70px rgba(93, 228, 214, .04); animation: slowspin 24s linear infinite; }
+    .orb-stage::after { content: ""; position: absolute; width: 60%; aspect-ratio: 1; border: 1px dashed rgba(183, 243, 75, .18); border-radius: 50%; transform: rotate(35deg); animation: slowspin 18s linear infinite reverse; }
+    .orb { position: relative; width: min(390px, 82%); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 32% 28%, rgba(183, 243, 75, .72), transparent 10%), radial-gradient(circle at 55% 52%, rgba(93, 228, 214, .3), transparent 44%), radial-gradient(circle at 50% 50%, #152321 0%, #0c1212 52%, #080b0d 72%); box-shadow: 0 0 80px rgba(93, 228, 214, .15), inset -20px -30px 80px rgba(0, 0, 0, .8), inset 15px 12px 60px rgba(183, 243, 75, .11); overflow: hidden; }
+    .orb-grid { position: absolute; inset: -15%; background: repeating-linear-gradient(0deg, transparent 0 22px, rgba(174, 240, 222, .08) 23px 24px), repeating-linear-gradient(90deg, transparent 0 22px, rgba(174, 240, 222, .08) 23px 24px); transform: rotate(22deg) scale(1.15); mask-image: radial-gradient(circle, black 0 46%, transparent 73%); animation: drift 12s linear infinite; }
+    .orb-core { position: absolute; inset: 37%; border-radius: 50%; background: var(--lime); box-shadow: 0 0 26px 6px rgba(183, 243, 75, .55), 0 0 90px 15px rgba(183, 243, 75, .18); animation: breathe 3s ease-in-out infinite; }
+    .orb-label { position: absolute; bottom: 21%; left: 0; right: 0; text-align: center; color: #d5e8d6; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; }
+    .float-card { position: absolute; z-index: 2; padding: 13px 15px; border: 1px solid rgba(214, 236, 226, .2); border-radius: 13px; background: rgba(11, 16, 17, .72); backdrop-filter: blur(16px); box-shadow: 0 14px 40px rgba(0, 0, 0, .22); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; animation: float 5s ease-in-out infinite; }
+    .float-card strong { display: block; margin-top: 5px; color: var(--lime); font-size: 16px; letter-spacing: .03em; }
+    .float-card.one { top: 18%; right: 4%; }
+    .float-card.two { bottom: 14%; left: 4%; animation-delay: -2s; }
+    .section { position: relative; z-index: 1; padding: 95px 0; border-top: 1px solid var(--line); }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 40px; }
+    .section h2 { max-width: 600px; margin: 0; font-size: clamp(2.5rem, 5vw, 4.8rem); line-height: .98; letter-spacing: -.06em; font-weight: 560; }
+    .section-intro { max-width: 330px; color: #8f9b94; font-size: 14px; line-height: 1.65; }
+    .manifesto { display: grid; grid-template-columns: 1.25fr .75fr; gap: 70px; }
+    .manifesto-lead { margin: 0; color: #dce8df; font-size: clamp(1.45rem, 2.3vw, 2.25rem); line-height: 1.22; letter-spacing: -.03em; }
+    .manifesto-lead span { color: var(--lime); }
+    .manifesto-side { border-left: 1px solid var(--line); padding-left: 25px; color: #8f9b94; font-size: 14px; line-height: 1.7; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { min-height: 240px; display: flex; flex-direction: column; justify-content: space-between; padding: 23px; border: 1px solid var(--line); background: linear-gradient(145deg, rgba(26, 37, 34, .45), rgba(10, 14, 15, .32)); transition: border-color .25s ease, transform .25s ease, background .25s ease; }
+    .card:hover { transform: translateY(-5px); border-color: rgba(183, 243, 75, .45); background: linear-gradient(145deg, rgba(35, 55, 47, .62), rgba(10, 14, 15, .5)); }
+    .card-num { color: var(--aqua); font-size: 11px; letter-spacing: .16em; }
+    .card h3 { margin: 50px 0 8px; font-size: 25px; font-weight: 500; letter-spacing: -.04em; }
+    .card p { margin: 0; color: #919d96; font-size: 14px; line-height: 1.55; }
+    .signal { display: flex; align-items: center; gap: 14px; margin-top: 22px; color: #aab8af; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    .signal-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--lime), transparent); }
+    .plan-wrap { border: 1px solid var(--line); background: linear-gradient(145deg, rgba(26, 37, 34, .38), rgba(10, 14, 15, .36)); }
+    .plan-topline { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 22px; border-bottom: 1px solid var(--line); color: #8f9b94; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+    .plan-topline strong { color: var(--lime); font-size: 12px; font-weight: 600; letter-spacing: .08em; }
+    .plan-table { width: 100%; border-collapse: collapse; }
+    .plan-table th, .plan-table td { padding: 20px 22px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .plan-table th { color: #718078; font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }
+    .plan-table td { color: #b8c4bc; font-size: 14px; line-height: 1.45; }
+    .plan-table tbody tr:last-child td { border-bottom: 0; }
+    .plan-table tbody tr { transition: background .25s ease; }
+    .plan-table tbody tr:hover { background: rgba(183, 243, 75, .045); }
+    .plan-table .phase { width: 12%; color: var(--aqua); font-size: 11px; letter-spacing: .15em; }
+    .plan-table .focus { width: 31%; color: var(--text); font-size: 18px; letter-spacing: -.03em; }
+    .plan-table .detail { width: 37%; color: #919d96; }
+    .plan-table .status { width: 20%; }
+    .status-chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 999px; color: #9ba9a0; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+    .status-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #65736c; }
+    .status-chip.current { border-color: rgba(183, 243, 75, .42); color: var(--lime); background: rgba(183, 243, 75, .08); }
+    .status-chip.current::before { background: var(--lime); box-shadow: 0 0 11px rgba(183, 243, 75, .7); animation: pulse 2s infinite; }
+    .plan-note { margin: 16px 22px 20px; color: #748179; font-size: 12px; line-height: 1.6; }
+    .language-gate { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: rgba(4, 7, 8, .84); backdrop-filter: blur(18px); transition: opacity .35s ease, visibility .35s ease; }
+    .language-gate.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .language-dialog { width: min(520px, 100%); padding: 34px; border: 1px solid rgba(183, 243, 75, .28); background: linear-gradient(145deg, rgba(23, 34, 31, .95), rgba(8, 12, 13, .97)); box-shadow: 0 30px 80px rgba(0, 0, 0, .45); }
+    .language-dialog-kicker { color: var(--aqua); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; }
+    .language-dialog h2 { margin: 18px 0 12px; color: var(--text); font-size: clamp(2rem, 5vw, 3.4rem); line-height: .98; letter-spacing: -.06em; font-weight: 560; }
+    .language-dialog p { margin: 0 0 25px; color: #94a39a; font-size: 14px; line-height: 1.6; }
+    .language-choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .language-choice { display: flex; align-items: center; gap: 12px; padding: 14px 15px; border: 1px solid var(--line); background: rgba(11, 17, 17, .72); color: #d9e4dc; cursor: pointer; text-align: left; transition: border-color .25s ease, transform .25s ease, background .25s ease; }
+    .language-choice:hover { transform: translateY(-2px); border-color: var(--lime); background: rgba(183, 243, 75, .08); }
+    .language-choice .language-flag { font-size: 22px; }
+    .language-choice strong { display: block; font-size: 14px; font-weight: 550; }
+    .language-choice small { display: block; margin-top: 3px; color: #78877e; font-size: 11px; }
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--line); padding: 24px 0 35px; display: flex; justify-content: space-between; color: #758079; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .8s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    @keyframes pulse { 0%, 100% { opacity: .4; transform: scale(.82); } 50% { opacity: 1; transform: scale(1.16); } }
+    @keyframes slowspin { to { transform: rotate(360deg); } }
+    @keyframes drift { to { transform: rotate(22deg) scale(1.15) translate(20px, -12px); } }
+    @keyframes breathe { 0%, 100% { transform: scale(.84); opacity: .8; } 50% { transform: scale(1.12); opacity: 1; } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+    @media (max-width: 900px) {
+      .shell { width: min(100% - 34px, 720px); }
+      nav { display: none; }
+      .hero { grid-template-columns: 1fr; padding-top: 48px; }
+      .orb-stage { min-height: 400px; margin-top: -25px; }
+      .manifesto { grid-template-columns: 1fr; gap: 28px; }
+      .manifesto-side { border-left: 0; border-top: 1px solid var(--line); padding: 24px 0 0; }
+      .cards { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .section-intro { margin-top: 20px; }
+      .plan-table th, .plan-table td { padding: 16px 14px; }
+      .plan-table .phase { width: 14%; }
+      .plan-table .focus { width: 32%; font-size: 16px; }
+      .plan-table .detail { width: 34%; }
+      .plan-table .status { width: 20%; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 26px, 480px); }
+      header { padding: 18px 0; }
+      .pill { display: none; }
+      .language-trigger { padding: 8px 10px; }
+      .language-menu { right: -2px; }
+      h1 { font-size: clamp(3.65rem, 19vw, 6rem); }
+      .hero { min-height: auto; padding: 68px 0 76px; gap: 20px; }
+      .hero-copy { font-size: 16px; }
+      .hero-meta { gap: 17px; margin-top: 38px; flex-wrap: wrap; }
+      .orb-stage { min-height: 330px; }
+      .float-card { padding: 10px 11px; font-size: 9px; }
+      .float-card strong { font-size: 13px; }
+      .section { padding: 70px 0; }
+      .section h2 { font-size: 2.7rem; }
+      .plan-wrap { overflow-x: auto; }
+      .plan-topline { align-items: flex-start; flex-direction: column; gap: 8px; padding: 16px; }
+      .plan-table { min-width: 670px; }
+      .plan-table th, .plan-table td { padding: 15px 14px; }
+      .plan-note { margin: 14px 16px 18px; }
+      footer { display: block; line-height: 1.8; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
+      #network-canvas { display: none; }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="language-gate" id="language-gate" role="dialog" aria-modal="true" aria-labelledby="language-gate-title">
+    <div class="language-dialog">
+      <div class="language-dialog-kicker">Cornerstone Network / Welcome</div>
+      <h2 id="language-gate-title">Choose your language</h2>
+      <p>选择语言 · 언어 선택 · 言語を選択</p>
+      <div class="language-choices">
+        <button class="language-choice" type="button" data-language="zh"><span class="language-flag">🇨🇳</span><span><strong>中文</strong><small>简体中文</small></span></button>
+        <button class="language-choice" type="button" data-language="en"><span class="language-flag">🇺🇸</span><span><strong>English</strong><small>English</small></span></button>
+        <button class="language-choice" type="button" data-language="ko"><span class="language-flag">🇰🇷</span><span><strong>한국어</strong><small>한국어</small></span></button>
+        <button class="language-choice" type="button" data-language="ja"><span class="language-flag">🇯🇵</span><span><strong>日本語</strong><small>日本語</small></span></button>
+      </div>
+    </div>
+  </div>
+  <div class="page">
+    <canvas id="network-canvas" aria-hidden="true"></canvas>
+    <div class="noise" aria-hidden="true"></div>
+    <div class="shell">
+      <header>
+        <a class="brand" href="#top" aria-label="Cornerstone Network home"><span class="brand-mark" aria-hidden="true"></span>Cornerstone</a>
+        <nav aria-label="Main navigation">
+          <a href="#vision" data-i18n="navVision">Vision</a>
+          <a href="#layers" data-i18n="navLayers">Layers</a>
+          <a href="#roadmap" data-i18n="navPlan">Plan</a>
+          <a href="#genesis" data-i18n="navGenesis">Genesis</a>
+        </nav>
+        <div class="header-actions">
+          <span class="pill"><span class="live-dot"></span><span data-i18n="genesisPhase">Genesis phase</span></span>
+          <div class="language-control" id="language-control">
+            <button class="language-trigger" id="language-trigger" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Choose language"><span class="language-flag" id="language-flag">🇺🇸</span><span id="language-code">EN</span><span class="language-chevron">⌄</span></button>
+            <div class="language-menu" id="language-menu" role="menu">
+              <button class="language-option" type="button" data-language="zh" role="menuitem"><span class="language-flag">🇨🇳</span><span>中文</span></button>
+              <button class="language-option selected" type="button" data-language="en" role="menuitem"><span class="language-flag">🇺🇸</span><span>English</span></button>
+              <button class="language-option" type="button" data-language="ko" role="menuitem"><span class="language-flag">🇰🇷</span><span>한국어</span></button>
+              <button class="language-option" type="button" data-language="ja" role="menuitem"><span class="language-flag">🇯🇵</span><span>日本語</span></button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main id="top">
+        <section class="hero">
+          <div class="hero-content reveal">
+            <div class="eyebrow" data-i18n="eyebrow">EVM compatible · building in public</div>
+            <h1 data-i18n="heroTitle">Every corner<br />of the network<br /><em>connected.</em></h1>
+            <p class="hero-copy"><strong data-i18n="heroLead">A new foundation for games, digital assets and creator communities.</strong> <span data-i18n="heroCopy">One EVM network for ideas that deserve to move, compose and belong together.</span></p>
+            <div class="hero-cta"><a class="cta" href="#vision"><span class="cta-label" data-i18n="readSignal">Read the signal</span><span class="cta-arrow">↗</span></a><a class="ghost" href="#genesis" data-i18n="followGenesis">Follow the genesis log</a></div>
+            <div class="hero-meta"><div><span data-i18n="metaNetwork">Network</span><b data-i18n="metaNetworkValue">Preparing</b></div><div><span data-i18n="metaCompatibility">Compatibility</span><b data-i18n="metaCompatibilityValue">Ethereum tooling</b></div><div><span data-i18n="metaFocus">Focus</span><b data-i18n="metaFocusValue">Creation + coordination</b></div></div>
+          </div>
+          <div class="orb-stage reveal" aria-hidden="true">
+            <div class="orb"><div class="orb-grid"></div><div class="orb-core"></div><div class="orb-label" data-i18n="orbLabel">signal / shared state</div></div>
+            <div class="float-card one"><span data-i18n="blockTime">Block time</span><strong>~ 02.4s</strong></div>
+            <div class="float-card two"><span data-i18n="nodesOnline">Nodes online</span><strong data-i18n="nodesOnlineValue">forming</strong></div>
+          </div>
+        </section>
+
+        <section class="section" id="vision">
+          <div class="section-head reveal"><h2 data-i18n="visionTitle">A network for the work <em>between</em> people.</h2><p class="section-intro" data-i18n="visionIntro">The chain is infrastructure for shared worlds: where a game item, a song, a contribution or an idea can carry its history forward.</p></div>
+          <div class="manifesto reveal"><p class="manifesto-lead" data-i18n="manifestoLead">We are building a place where <span>ownership has context</span>, creation has provenance, and communities can coordinate without losing the thread.</p><p class="manifesto-side" data-i18n="manifestoSide">The first release is taking shape around EVM compatibility, open tooling and a practical path from prototype to public network.</p></div>
+        </section>
+
+        <section class="section" id="layers">
+          <div class="section-head reveal"><h2 data-i18n="layersTitle">Three layers.<br />One shared signal.</h2><p class="section-intro" data-i18n="layersIntro">A focused starting point for the network we want to make useful.</p></div>
+          <div class="cards">
+            <article class="card reveal"><div class="card-num">01 / PLAY</div><div><h3 data-i18n="cardGameTitle">Game worlds</h3><p data-i18n="cardGameCopy">Assets and identities that can travel with the people who make them meaningful.</p></div></article>
+            <article class="card reveal"><div class="card-num">02 / PROVE</div><div><h3 data-i18n="cardContentTitle">Content roots</h3><p data-i18n="cardContentCopy">Record provenance, versions and permissions without forcing the original work on-chain.</p></div></article>
+            <article class="card reveal"><div class="card-num">03 / SHAPE</div><div><h3 data-i18n="cardCommunityTitle">Community rules</h3><p data-i18n="cardCommunityCopy">Coordinate contributions, treasury and decisions with governance that can evolve.</p></div></article>
+          </div>
+          <div class="signal reveal"><span data-i18n="nextSignal">next signal</span><span class="signal-line"></span><span data-i18n="nextSignalValue">testnet planning</span></div>
+        </section>
+
+        <section class="section" id="roadmap">
+          <div class="section-head reveal"><h2 data-i18n="roadmapTitle">Build plan.<br /><em>Signal by signal.</em></h2><p class="section-intro" data-i18n="roadmapIntro">The network is in its preparation stage. We are writing the EVM deployment whitepaper and testing the assumptions behind the first release.</p></div>
+          <div class="plan-wrap reveal">
+            <div class="plan-topline"><span data-i18n="planTopline">Cornerstone network / working plan</span><strong data-i18n="planCurrent">Current: whitepaper + testing</strong></div>
+            <table class="plan-table">
+              <thead><tr><th data-i18n="tablePhase">Phase</th><th data-i18n="tableFocus">Focus</th><th data-i18n="tableWork">What we are doing</th><th data-i18n="tableStatus">Status</th></tr></thead>
+              <tbody>
+                <tr><td class="phase">01</td><td class="focus" data-i18n="phase1Title">Whitepaper + test work</td><td class="detail" data-i18n="phase1Copy">Define the network vision, EVM scope, consensus options, asset model and the first test cases.</td><td class="status"><span class="status-chip current" data-i18n="inProgress">In progress</span></td></tr>
+                <tr><td class="phase">02</td><td class="focus" data-i18n="phase2Title">Local network lab</td><td class="detail" data-i18n="phase2Copy">Validate genesis configuration, node roles, JSON-RPC flow, contracts and restart recovery in a controlled environment.</td><td class="status"><span class="status-chip" data-i18n="nextUp">Next up</span></td></tr>
+                <tr><td class="phase">03</td><td class="focus" data-i18n="phase3Title">Testnet rehearsal</td><td class="detail" data-i18n="phase3Copy">Bring together validators, tooling, explorer and monitoring. Run failure drills before inviting early builders.</td><td class="status"><span class="status-chip" data-i18n="planned">Planned</span></td></tr>
+                <tr><td class="phase">04</td><td class="focus" data-i18n="phase4Title">Public genesis</td><td class="detail" data-i18n="phase4Copy">Confirm governance, security review, launch parameters and the first creator or game community use cases.</td><td class="status"><span class="status-chip" data-i18n="planned">Planned</span></td></tr>
+              </tbody>
+            </table>
+            <p class="plan-note" data-i18n="planNote">计划会随着白皮书和测试结果持续更新。每个阶段都要先验证，再进入下一步。</p>
+          </div>
+        </section>
+
+        <section class="section" id="genesis">
+          <div class="section-head reveal"><h2 data-i18n="genesisTitle">Genesis is a process,<br /><em>not a launch day.</em></h2><p class="section-intro" data-i18n="genesisIntro">We are still choosing the right network shape, validator model and first community use cases. The build log starts here.</p></div>
+          <div class="hero-cta reveal"><a class="cta" href="mailto:hello@cornerstone.network"><span class="cta-label" data-i18n="openConversation">Open a conversation</span><span class="cta-arrow">↗</span></a><span class="ghost" data-i18n="moreSoon">More details soon</span></div>
+        </section>
+      </main>
+
+      <footer><span data-i18n="footerName">Cornerstone Network / 2026</span><span data-i18n="footerTags">EVM · games · assets · creators</span></footer>
+    </div>
+  </div>
+  <script>
+    const languageData = {
+      en: { flag:'🇺🇸', code:'EN', title:'Cornerstone Network — Connect What Matters', description:'A new EVM network for games, digital assets and creator collaboration. Genesis phase in progress.', genesisPhase:'Genesis phase', navVision:'Vision', navLayers:'Layers', navPlan:'Plan', navGenesis:'Genesis', eyebrow:'EVM compatible · building in public', heroTitle:'Every corner<br />of the network<br /><em>connected.</em>', heroLead:'A new foundation for games, digital assets and creator communities.', heroCopy:'One EVM network for ideas that deserve to move, compose and belong together.', readSignal:'Read the signal', followGenesis:'Follow the genesis log', metaNetwork:'Network', metaNetworkValue:'Preparing', metaCompatibility:'Compatibility', metaCompatibilityValue:'Ethereum tooling', metaFocus:'Focus', metaFocusValue:'Creation + coordination', orbLabel:'signal / shared state', blockTime:'Block time', nodesOnline:'Nodes online', nodesOnlineValue:'forming', visionTitle:'A network for the work <em>between</em> people.', visionIntro:'The chain is infrastructure for shared worlds: where a game item, a song, a contribution or an idea can carry its history forward.', manifestoLead:'We are building a place where <span>ownership has context</span>, creation has provenance, and communities can coordinate without losing the thread.', manifestoSide:'The first release is taking shape around EVM compatibility, open tooling and a practical path from prototype to public network.', layersTitle:'Three layers.<br />One shared signal.', layersIntro:'A focused starting point for the network we want to make useful.', cardGameTitle:'Game worlds', cardGameCopy:'Assets and identities that can travel with the people who make them meaningful.', cardContentTitle:'Content roots', cardContentCopy:'Record provenance, versions and permissions without forcing the original work on-chain.', cardCommunityTitle:'Community rules', cardCommunityCopy:'Coordinate contributions, treasury and decisions with governance that can evolve.', nextSignal:'next signal', nextSignalValue:'testnet planning', roadmapTitle:'Build plan.<br /><em>Signal by signal.</em>', roadmapIntro:'The network is in its preparation stage. We are writing the EVM deployment whitepaper and testing the assumptions behind the first release.', planTopline:'Cornerstone network / working plan', planCurrent:'Current: whitepaper + testing', tablePhase:'Phase', tableFocus:'Focus', tableWork:'What we are doing', tableStatus:'Status', phase1Title:'Whitepaper + test work', phase1Copy:'Define the network vision, EVM scope, consensus options, asset model and the first test cases.', inProgress:'In progress', phase2Title:'Local network lab', phase2Copy:'Validate genesis configuration, node roles, JSON-RPC flow, contracts and restart recovery in a controlled environment.', nextUp:'Next up', phase3Title:'Testnet rehearsal', phase3Copy:'Bring together validators, tooling, explorer and monitoring. Run failure drills before inviting early builders.', phase4Title:'Public genesis', phase4Copy:'Confirm governance, security review, launch parameters and the first creator or game community use cases.', planned:'Planned', planNote:'This plan will evolve with the whitepaper and test results. Each phase is verified before the next begins.', genesisTitle:'Genesis is a process,<br /><em>not a launch day.</em>', genesisIntro:'We are still choosing the right network shape, validator model and first community use cases. The build log starts here.', openConversation:'Open a conversation', moreSoon:'More details soon', footerName:'Cornerstone Network / 2026', footerTags:'EVM · games · assets · creators' },
+      zh: { flag:'🇨🇳', code:'中', title:'Cornerstone 网络 — 连接有价值的一切', description:'面向游戏、数字资产与创作者协作的新 EVM 网络，正在 Genesis 准备阶段。', genesisPhase:'创世阶段', navVision:'愿景', navLayers:'层', navPlan:'计划', navGenesis:'创世', eyebrow:'EVM 兼容 · 公开构建中', heroTitle:'网络世界的角落<br />彼此<em>连接。</em>', heroLead:'面向游戏、数字资产与创作者社区的新基础设施。', heroCopy:'让值得流动、组合并共同归属的想法，在同一条 EVM 网络上连接起来。', readSignal:'查看信号', followGenesis:'跟随创世记录', metaNetwork:'网络', metaNetworkValue:'准备中', metaCompatibility:'兼容性', metaCompatibilityValue:'以太坊工具链', metaFocus:'重点', metaFocusValue:'创作与协作', orbLabel:'信号 / 共享状态', blockTime:'区块时间', nodesOnline:'在线节点', nodesOnlineValue:'组建中', visionTitle:'为人与人<em>之间</em>的协作而生的网络。', visionIntro:'这条链是共享世界的基础设施：让游戏道具、歌曲、贡献或想法，都能带着自己的历史继续前进。', manifestoLead:'我们正在构建一个让<span>所有权有上下文</span>、创作有来源、社区可以协作而不丢失脉络的地方。', manifestoSide:'首个版本将围绕 EVM 兼容、开放工具，以及从原型走向公开网络的实际路径展开。', layersTitle:'三层结构。<br />共享一个信号。', layersIntro:'这是我们希望真正变得有用的网络起点。', cardGameTitle:'游戏世界', cardGameCopy:'让资产与身份跟随赋予它们意义的人一起流动。', cardContentTitle:'内容源点', cardContentCopy:'记录来源、版本与授权，不必把原始作品全部放到链上。', cardCommunityTitle:'社区规则', cardCommunityCopy:'用可以持续演进的治理方式协调贡献、资金库与共同决定。', nextSignal:'下一信号', nextSignalValue:'测试网规划', roadmapTitle:'构建计划。<br /><em>一步一步，传递信号。</em>', roadmapIntro:'网络目前处于准备阶段。我们正在编写 EVM 部署白皮书，并测试首个版本的关键假设。', planTopline:'Cornerstone 网络 / 工作计划', planCurrent:'当前：白皮书 + 测试', tablePhase:'阶段', tableFocus:'重点', tableWork:'当前工作', tableStatus:'状态', phase1Title:'白皮书 + 测试工作', phase1Copy:'明确网络愿景、EVM 范围、共识方案、资产模型与首批测试用例。', inProgress:'进行中', phase2Title:'本地网络实验室', phase2Copy:'在受控环境中验证 Genesis 配置、节点角色、JSON-RPC 流程、合约与重启恢复。', nextUp:'下一步', phase3Title:'测试网演练', phase3Copy:'整合验证者、工具链、浏览器与监控，在邀请早期构建者前完成故障演练。', phase4Title:'公开 Genesis', phase4Copy:'确认治理、安全评审、上线参数，以及首批创作者或游戏社区用例。', planned:'计划中', planNote:'计划会随着白皮书和测试结果持续更新。每个阶段都要先验证，再进入下一步。', genesisTitle:'Genesis 是一个过程，<br /><em>不是发布日。</em>', genesisIntro:'我们仍在选择合适的网络形态、验证者模型与首批社区用例。构建记录从这里开始。', openConversation:'开启交流', moreSoon:'更多信息即将到来', footerName:'Cornerstone 网络 / 2026', footerTags:'EVM · 游戏 · 资产 · 创作者' },
+      ko: { flag:'🇰🇷', code:'한', title:'Cornerstone Network — 연결되는 모든 가능성', description:'게임, 디지털 자산, 크리에이터 협업을 위한 새로운 EVM 네트워크입니다. Genesis 준비 단계입니다.', genesisPhase:'Genesis 단계', navVision:'비전', navLayers:'레이어', navPlan:'계획', navGenesis:'Genesis', eyebrow:'EVM 호환 · 공개적으로 구축 중', heroTitle:'네트워크의 모든 모서리가<br /><em>연결됩니다.</em>', heroLead:'게임, 디지털 자산, 크리에이터 커뮤니티를 위한 새로운 기반입니다.', heroCopy:'움직이고, 조합되고, 함께 소유될 가치가 있는 아이디어를 하나의 EVM 네트워크로 연결합니다.', readSignal:'신호 보기', followGenesis:'Genesis 로그 보기', metaNetwork:'네트워크', metaNetworkValue:'준비 중', metaCompatibility:'호환성', metaCompatibilityValue:'이더리움 도구', metaFocus:'초점', metaFocusValue:'창작과 협업', orbLabel:'신호 / 공유 상태', blockTime:'블록 시간', nodesOnline:'온라인 노드', nodesOnlineValue:'구성 중', visionTitle:'사람과 사람 <em>사이</em>의 작업을 위한 네트워크.', visionIntro:'체인은 공유된 세계를 위한 인프라입니다. 게임 아이템, 음악, 기여, 아이디어가 자신의 역사를 이어가도록 합니다.', manifestoLead:'<span>소유권에 맥락</span>을 더하고, 창작에 출처를 남기며, 커뮤니티가 흐름을 잃지 않고 협력하는 공간을 만듭니다.', manifestoSide:'첫 번째 릴리스는 EVM 호환성, 개방형 도구, 프로토타입에서 공개 네트워크로 이어지는 현실적인 경로를 중심으로 만들어집니다.', layersTitle:'세 개의 레이어.<br />하나의 공유 신호.', layersIntro:'유용한 네트워크를 만들기 위한 집중된 출발점입니다.', cardGameTitle:'게임 세계', cardGameCopy:'의미를 만드는 사람과 함께 이동할 수 있는 자산과 정체성을 만듭니다.', cardContentTitle:'콘텐츠의 뿌리', cardContentCopy:'원본 파일을 온체인에 올리지 않고도 출처, 버전, 권한을 기록합니다.', cardCommunityTitle:'커뮤니티 규칙', cardCommunityCopy:'진화할 수 있는 거버넌스로 기여, 재무, 의사결정을 조율합니다.', nextSignal:'다음 신호', nextSignalValue:'테스트넷 계획', roadmapTitle:'구축 계획.<br /><em>신호를 하나씩.</em>', roadmapIntro:'네트워크는 준비 단계에 있습니다. EVM 배포 백서를 작성하고 첫 번째 릴리스의 가정을 테스트하고 있습니다.', planTopline:'Cornerstone 네트워크 / 작업 계획', planCurrent:'현재: 백서 + 테스트', tablePhase:'단계', tableFocus:'초점', tableWork:'진행 내용', tableStatus:'상태', phase1Title:'백서 + 테스트 작업', phase1Copy:'네트워크 비전, EVM 범위, 합의 방식, 자산 모델과 첫 테스트 케이스를 정의합니다.', inProgress:'진행 중', phase2Title:'로컬 네트워크 랩', phase2Copy:'통제된 환경에서 Genesis 설정, 노드 역할, JSON-RPC 흐름, 컨트랙트와 재시작 복구를 검증합니다.', nextUp:'다음 단계', phase3Title:'테스트넷 리허설', phase3Copy:'검증자, 도구, 익스플로러, 모니터링을 연결하고 초기 빌더를 초대하기 전에 장애 훈련을 진행합니다.', phase4Title:'퍼블릭 Genesis', phase4Copy:'거버넌스, 보안 검토, 출시 파라미터와 첫 크리에이터 또는 게임 커뮤니티 사용 사례를 확정합니다.', planned:'계획됨', planNote:'이 계획은 백서와 테스트 결과에 따라 계속 업데이트됩니다. 다음 단계로 가기 전에 각 단계를 검증합니다.', genesisTitle:'Genesis는 과정입니다.<br /><em>출시 하루가 아닙니다.</em>', genesisIntro:'적절한 네트워크 형태, 검증자 모델, 첫 커뮤니티 사용 사례를 계속 선택하고 있습니다. 빌드 로그는 여기서 시작됩니다.', openConversation:'대화 시작', moreSoon:'자세한 내용은 곧 공개됩니다', footerName:'Cornerstone Network / 2026', footerTags:'EVM · 게임 · 자산 · 크리에이터' },
+      ja: { flag:'🇯🇵', code:'日', title:'Cornerstone Network — つながる可能性', description:'ゲーム、デジタルアセット、クリエイター協働のための新しいEVMネットワーク。Genesis準備中。', genesisPhase:'Genesis 準備段階', navVision:'ビジョン', navLayers:'レイヤー', navPlan:'計画', navGenesis:'Genesis', eyebrow:'EVM互換 · オープンに構築中', heroTitle:'ネットワークの隅々が<br /><em>つながる。</em>', heroLead:'ゲーム、デジタルアセット、クリエイターコミュニティのための新しい基盤です。', heroCopy:'動き、組み合わさり、共に所有される価値のあるアイデアを、ひとつのEVMネットワークでつなぎます。', readSignal:'シグナルを見る', followGenesis:'Genesisログを見る', metaNetwork:'ネットワーク', metaNetworkValue:'準備中', metaCompatibility:'互換性', metaCompatibilityValue:'Ethereumツール', metaFocus:'フォーカス', metaFocusValue:'創作と協働', orbLabel:'シグナル / 共有状態', blockTime:'ブロック時間', nodesOnline:'オンラインノード', nodesOnlineValue:'構築中', visionTitle:'人と人の<em>あいだ</em>にある営みのためのネットワーク。', visionIntro:'このチェーンは共有された世界のインフラです。ゲームアイテム、音楽、貢献、アイデアがその履歴を持って前へ進めます。', manifestoLead:'<span>所有権に文脈</span>を与え、創作に来歴を残し、コミュニティが流れを失わず協働できる場所をつくります。', manifestoSide:'最初のリリースは、EVM互換性、オープンなツール、プロトタイプから公開ネットワークへ進む現実的な道筋を軸に形づくられます。', layersTitle:'3つのレイヤー。<br />ひとつの共有シグナル。', layersIntro:'役に立つネットワークをつくるための、焦点を絞った出発点です。', cardGameTitle:'ゲームの世界', cardGameCopy:'意味を与える人とともに移動できるアセットとアイデンティティ。', cardContentTitle:'コンテンツの起点', cardContentCopy:'原作品をオンチェーンに載せず、来歴、バージョン、権限を記録します。', cardCommunityTitle:'コミュニティのルール', cardCommunityCopy:'進化できるガバナンスで、貢献、トレジャリー、意思決定を調整します。', nextSignal:'次のシグナル', nextSignalValue:'テストネット計画', roadmapTitle:'構築計画。<br /><em>シグナルをひとつずつ。</em>', roadmapIntro:'ネットワークは準備段階にあります。EVMデプロイ白書を作成し、最初のリリースに向けた前提をテストしています。', planTopline:'Cornerstone ネットワーク / 作業計画', planCurrent:'現在：白書 + テスト', tablePhase:'段階', tableFocus:'焦点', tableWork:'実施内容', tableStatus:'状態', phase1Title:'白書 + テスト作業', phase1Copy:'ネットワークのビジョン、EVMの範囲、コンセンサス案、アセットモデル、最初のテストケースを定義します。', inProgress:'進行中', phase2Title:'ローカルネットワークラボ', phase2Copy:'管理された環境でGenesis設定、ノードの役割、JSON-RPCフロー、コントラクト、再起動復旧を検証します。', nextUp:'次の段階', phase3Title:'テストネットリハーサル', phase3Copy:'バリデーター、ツール、エクスプローラー、監視をそろえ、初期ビルダーを招く前に障害訓練を行います。', phase4Title:'パブリックGenesis', phase4Copy:'ガバナンス、セキュリティレビュー、ローンチパラメータ、最初のクリエイターまたはゲームコミュニティのユースケースを確定します。', planned:'計画中', planNote:'この計画は白書とテスト結果に合わせて更新されます。次の段階へ進む前に、各段階を検証します。', genesisTitle:'Genesisはプロセス。<br /><em>ローンチの日ではない。</em>', genesisIntro:'適切なネットワークの形、バリデーターモデル、最初のコミュニティユースケースを選定中です。ビルドログはここから始まります。', openConversation:'話を始める', moreSoon:'詳細は近日公開', footerName:'Cornerstone Network / 2026', footerTags:'EVM · ゲーム · アセット · クリエイター' }
+    };
+    const languageGate = document.getElementById('language-gate');
+    const languageControl = document.getElementById('language-control');
+    const languageTrigger = document.getElementById('language-trigger');
+    function readSavedLanguage() { try { return localStorage.getItem('cornerstone-language'); } catch (error) { return null; } }
+    function saveLanguage(language) { try { localStorage.setItem('cornerstone-language', language); } catch (error) {} }
+    function setLanguage(language, persist = true) {
+      const selected = languageData[language] ? language : 'en';
+      const copy = languageData[selected];
+      document.documentElement.lang = selected === 'zh' ? 'zh-CN' : selected;
+      document.title = copy.title;
+      document.querySelector('meta[name="description"]').setAttribute('content', copy.description);
+      document.querySelectorAll('[data-i18n]').forEach((element) => { const value = copy[element.dataset.i18n]; if (value !== undefined) element.innerHTML = value; });
+      document.getElementById('language-flag').textContent = copy.flag;
+      document.getElementById('language-code').textContent = copy.code;
+      document.querySelectorAll('.language-option').forEach((option) => option.classList.toggle('selected', option.dataset.language === selected));
+      document.querySelectorAll('[data-language]').forEach((option) => option.setAttribute('aria-pressed', option.dataset.language === selected ? 'true' : 'false'));
+      if (persist) saveLanguage(selected);
+      languageGate.classList.add('is-hidden');
+      languageControl.classList.remove('open');
+      languageTrigger.setAttribute('aria-expanded', 'false');
+    }
+    document.querySelectorAll('[data-language]').forEach((option) => option.addEventListener('click', () => setLanguage(option.dataset.language)));
+    languageTrigger.addEventListener('click', () => { const open = languageControl.classList.toggle('open'); languageTrigger.setAttribute('aria-expanded', String(open)); });
+    document.addEventListener('click', (event) => { if (!languageControl.contains(event.target)) { languageControl.classList.remove('open'); languageTrigger.setAttribute('aria-expanded', 'false'); } });
+    const savedLanguage = readSavedLanguage();
+    setLanguage(savedLanguage || 'en', false);
+    if (!savedLanguage) languageGate.classList.remove('is-hidden');
+  </script>
+  <script>
+    const canvas = document.getElementById('network-canvas');
+    const ctx = canvas.getContext('2d');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pointer = { x: -9999, y: -9999 };
+    let nodes = [];
+    let width = 0, height = 0;
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth; height = window.innerHeight;
+      canvas.width = width * dpr; canvas.height = height * dpr; canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = Math.min(110, Math.max(42, Math.floor(width * height / 14500)));
+      nodes = Array.from({ length: count }, (_, i) => ({ x: Math.random() * width, y: Math.random() * height, vx: (Math.random() - .5) * .18, vy: (Math.random() - .5) * .18, r: i % 10 === 0 ? 2.8 : 1 + Math.random() * 1.4, pulse: Math.random() * Math.PI * 2 }));
+    }
+    function draw(time) {
+      ctx.clearRect(0, 0, width, height);
+      const glow = ctx.createRadialGradient(width * .72, height * .25, 0, width * .72, height * .25, width * .7);
+      glow.addColorStop(0, 'rgba(93, 228, 214, .055)'); glow.addColorStop(1, 'rgba(8, 11, 13, 0)'); ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
+      nodes.forEach((n, i) => { if (!reduceMotion) { n.x += n.vx; n.y += n.vy; if (n.x < -20 || n.x > width + 20) n.vx *= -1; if (n.y < -20 || n.y > height + 20) n.vy *= -1; } n.pulse += .015; });
+      for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+          const b = nodes[j]; const dx = a.x - b.x; const dy = a.y - b.y; const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 145) { const alpha = (1 - d / 145) * .18; ctx.strokeStyle = `rgba(122, 191, 179, ${alpha})`; ctx.lineWidth = .6; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+        }
+        const distance = Math.hypot(a.x - pointer.x, a.y - pointer.y);
+        if (distance < 180) { ctx.strokeStyle = `rgba(183, 243, 75, ${(.35 * (1 - distance / 180)).toFixed(3)})`; ctx.lineWidth = .9; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(pointer.x, pointer.y); ctx.stroke(); }
+      }
+      nodes.forEach((n, i) => { const active = Math.hypot(n.x - pointer.x, n.y - pointer.y) < 120; const c = i % 7 === 0 || active ? '#b7f34b' : '#5de4d6'; const radius = n.r + (active ? 1.3 : Math.sin(n.pulse) * .3); ctx.fillStyle = c; ctx.globalAlpha = active ? .95 : .55; ctx.beginPath(); ctx.arc(n.x, n.y, radius, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; });
+      if (!reduceMotion) requestAnimationFrame(draw);
+    }
+    window.addEventListener('resize', resize); window.addEventListener('pointermove', e => { pointer.x = e.clientX; pointer.y = e.clientY; }); window.addEventListener('pointerleave', () => { pointer.x = -9999; pointer.y = -9999; }); resize(); draw();
+    const observer = new IntersectionObserver((entries) => entries.forEach(entry => entry.isIntersecting && entry.target.classList.add('visible')), { threshold: .12 }); document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
